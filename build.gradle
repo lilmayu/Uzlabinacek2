@@ -1,16 +1,55 @@
 plugins {
     id 'java'
+    id 'com.github.johnrengelman.shadow' version '7.0.0'
 }
 
 group 'lilmayu'
 version '1.0'
 
 repositories {
+    flatDir { dirs 'libs'}
     mavenCentral()
+    maven {
+        name 'm2-dv8tion'
+        url 'https://m2.dv8tion.net/releases'
+    }
 }
 
 dependencies {
+    // JDA
+    implementation('net.dv8tion:JDA:4.3.0_324') {
+        exclude module: 'opus-java'
+    }
 
+    // SLF4J
+    implementation group: 'org.slf4j', name:'slf4j-api', version: '1.7.2'
+    implementation group: 'ch.qos.logback', name:'logback-classic', version: '1.0.9'
+    implementation group: 'ch.qos.logback', name:'logback-core', version: '1.0.9'
 
+    // Personal libraries
+    implementation name: 'MayusJDAUtilities-2.0'
+    implementation name: 'MayusJsonUtils-1.2'
+    implementation name: 'MayusLibrary-0.1'
 
+    // Other local libraries
+    implementation name: 'jda-chewtils-custom'
+
+    // GSON
+    implementation 'com.google.code.gson:gson:2.8.8';
+
+    // Lombok
+    compileOnly 'org.projectlombok:lombok:1.18.20'
+    annotationProcessor 'org.projectlombok:lombok:1.18.20'
 }
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
+shadowJar {
+    manifest {
+        attributes 'Main-Class': 'lilmayu.uzlabinacek.Main'
+    }
+}
+
+build.dependsOn shadowJar
