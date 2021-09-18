@@ -325,8 +325,8 @@ public class FoodMenuManager {
                 String url = "www.strava.cz";
                 Socket socket = new Socket(url, 80);
 
-                BufferedWriter out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8));
-                BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                BufferedWriter out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), "windows-1250"));
+                BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream(), "windows-1250"));
 
                 String msg = "GET /foxisapi/foxisapi.dll/istravne.istravne.process?xmljidelnickyA&zarizeni=3148 HTTP/1.1\r\nUser-Agent: RawHttpGet\r\nHost: www.strava.cz\r\nAccept: */*\r\n";
                 sendMessage(out, msg);
