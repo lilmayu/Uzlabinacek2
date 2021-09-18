@@ -12,7 +12,9 @@ import lilmayu.mayuslibrary.exceptionreporting.ExceptionReporter;
 import lilmayu.mayuslibrary.logging.Logger;
 import lilmayu.mayuslibrary.logging.coloring.ColoringString;
 import lilmayu.uzlabinacek.commands.AboutCommand;
+import lilmayu.uzlabinacek.commands.FoodMenuCommand;
 import lilmayu.uzlabinacek.listeners.CommandListener;
+import lilmayu.uzlabinacek.managers.FoodMenuManager;
 import lilmayu.uzlabinacek.other.Config;
 import lilmayu.uzlabinacek.other.Constants;
 import lilmayu.uzlabinacek.other.types.CommandLogType;
@@ -83,17 +85,15 @@ public class Main {
     }
 
     private static void loadCommands() {
-        client.addSlashCommands(new MayuHelpCommand(), new AboutCommand());
+        client.addSlashCommands(new MayuHelpCommand(), new AboutCommand(), new FoodMenuCommand());
     }
 
     private static void loadManagers() {
-
+        FoodMenuManager.load();
+        FoodMenuManager.startUpdateTimer();
     }
 
     private static void loadLibrarySettings() {
-        Logger.setFormat("- " + Logger.getFormat());
-        Logger.addColoringString(new ColoringString(new CommandLogType(), new Color().setForeground(Colors.DARK_GRAY).build(), Color.RESET));
-        DiscordUtils.setDefaultEmbed(new EmbedBuilder().setFooter("Powered by Úžlabiňáček 2.0").setColor(new java.awt.Color(0x8E1919)));
         ExceptionReporter.registerExceptionReporter();
         ExceptionReporter.getInstance().addListener(new ExceptionListener("default", "lilmayu", exceptionReport -> {
             exceptionReport.getThrowable().printStackTrace();
@@ -112,9 +112,18 @@ public class Main {
         }));
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             Logger.info("Shutting down...");
-            Logger.info("Saving config...");
+
             Config.save();
+            FoodMenuManager.save();
+
             Logger.info("o/");
         }));
+
+        Logger.setFormat("- " + Logger.getFormat());
+        Logger.addColoringString(new ColoringString(new CommandLogType(), new Color().setForeground(Colors.DARK_GRAY).build(), Color.RESET));
+        DiscordUtils.setDefaultEmbed(new EmbedBuilder().setFooter("Powered by Úžlabiňáček 2.0").setColor(new java.awt.Color(0x8E1919)).setDescription("Loading..."));
+
+        Config.init();
+        FoodMenuManager.init();
     }
 }

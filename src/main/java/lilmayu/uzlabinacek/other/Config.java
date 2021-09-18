@@ -3,6 +3,7 @@ package lilmayu.uzlabinacek.other;
 import com.google.gson.JsonPrimitive;
 import lilmayu.mayusjsonutils.JsonUtil;
 import lilmayu.mayusjsonutils.objects.MayuJson;
+import lilmayu.mayuslibrary.logging.LogPrefix;
 import lilmayu.mayuslibrary.logging.Logger;
 import lombok.Getter;
 import lombok.Setter;
@@ -16,6 +17,10 @@ public class Config {
     private static @Getter @Setter long exceptionMessageChannelID = 0;
     private static @Getter @Setter long ownerID = 0;
     private static @Getter @Setter boolean debug = false;
+
+    public static void init() {
+        Logger.addLogPrefix(new LogPrefix("[Config]", Config.class));
+    }
 
     public static void load() {
         try {

@@ -37,6 +37,9 @@ dependencies {
     // GSON
     implementation 'com.google.code.gson:gson:2.8.8';
 
+    // Jsoup
+    implementation "com.github.axet:wget:1.2.7"
+
     // Lombok
     compileOnly 'org.projectlombok:lombok:1.18.20'
     annotationProcessor 'org.projectlombok:lombok:1.18.20'
