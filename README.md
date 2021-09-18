@@ -8,7 +8,7 @@
   </a>
 </p>
 <p align="center">
-    Discord bot pro užití na Úžlabina-related discordech.
+    Discord bot pro užití na Úžlabina-related serverech.
 </p>
 
 ## Funkce
