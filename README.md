@@ -12,6 +12,6 @@
 </p>
 
 ## Funkce
- - Jídelníček
- - Hodiny
- - Počasí
+ - [x] Jídelníček
+ - [ ] Hodiny
+ - [ ] Počasí
