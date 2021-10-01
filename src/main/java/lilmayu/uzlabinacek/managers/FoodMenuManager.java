@@ -24,7 +24,6 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.*;
 import java.net.Socket;
-import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -120,21 +119,50 @@ public class FoodMenuManager {
             return;
         }
 
+        foodMenu.cut();
         foodMenu.reverseList();
-        for (Meal meal : foodMenu.meals()) {
-            String soup = meal.parseSoup();
-            String mainCourse = meal.parseMainCourse();
-            String description = meal.parseDescription();
+        for (Meal meal : foodMenu.getMeals()) {
+            String soupFirst = meal.parseFirstSoup();
+            String mainCourseFirst = meal.parseFirstMainCourse();
+            String descriptionFirst = meal.parseFirstDescription();
+
+            String soupSecond = null;
+            String mainCourseSecond = null;
+            String descriptionSecond = null;
+
+            if (meal.hasSecond()) {
+                soupSecond = meal.parseSecondSoup();
+                mainCourseSecond = meal.parseSecondMainCourse();
+                descriptionSecond = meal.parseSecondDescription();
+            }
+
             String date = meal.parseDate();
 
             if (lastSuccessfulEmbedCache.getFields().size() < 25) {
-                String fieldValue = "Polévka: " + soup + "\nHlavní chod: **" + mainCourse + "**";
+                String fieldValue;
+                if (!meal.hasSecond()) {
+                    fieldValue = "Polévka: " + soupFirst + "\nHlavní chod: **" + mainCourseFirst + "**";
 
-                if (meal.hasDescription()) {
-                    fieldValue += "\nPopis: " + description;
+                    if (meal.hasFirstDescription()) {
+                        fieldValue += "\nPopis: " + descriptionFirst;
+                    }
+
+                    lastSuccessfulEmbedCache.addField("> " + date, fieldValue, false);
+                } else {
+                    fieldValue = "> První oběd\n";
+                    fieldValue += "Polévka: " + soupFirst + "\nHlavní chod: **" + mainCourseFirst + "**\n";
+                    if (meal.hasFirstDescription()) {
+                        fieldValue += "\nPopis: " + descriptionFirst + "\n";
+                    }
+
+                    fieldValue += "> Druhý oběd\n";
+                    fieldValue += "Polévka: " + soupSecond + "\nHlavní chod: **" + mainCourseSecond + "**\n";
+                    if (meal.hasSecondDescription()) {
+                        fieldValue += "\nPopis: " + descriptionSecond;
+                    }
+
+                    lastSuccessfulEmbedCache.addField("> " + date, fieldValue, false);
                 }
-
-                lastSuccessfulEmbedCache.addField("> " + date, fieldValue, false);
             }
         }
     }
@@ -201,9 +229,12 @@ public class FoodMenuManager {
 
     // Objects
 
-    private record FoodMenu(List<Meal> meals, long time) {
+    private static class FoodMenu {
 
-        private FoodMenu(List<Meal> meals, long time) {
+        private @Getter List<Meal> meals;
+        private @Getter long time;
+
+        public FoodMenu(List<Meal> meals, long time) {
             this.meals = meals;
             this.time = time;
         }
@@ -211,16 +242,40 @@ public class FoodMenuManager {
         public void reverseList() {
             Collections.reverse(meals);
         }
+
+        public void cut() {
+            if (meals.size() > 25) {
+                meals = meals.subList(0, 25);
+            }
+        }
     }
 
+    private static class Meal {
 
-    private record Meal(String name, String description, String date) {
+        private @Getter String nameFirst;
+        private @Getter String descriptionFirst;
+        private @Getter String nameSecond;
+        private @Getter String descriptionSecond;
 
-        private Meal(String name, String description, String date) {
-            this.name = name;
-            if (description == null)
-                description = "";
-            this.description = description;
+        private @Getter String date;
+
+        public Meal(String nameFirst, String descriptionFirst, String date) {
+            this.nameFirst = nameFirst;
+            if (descriptionFirst == null)
+                descriptionFirst = "";
+            this.descriptionFirst = descriptionFirst;
+            this.date = date;
+        }
+
+        public Meal(String nameFirst, String descriptionFirst, String nameSecond, String descriptionSecond, String date) {
+            this.nameFirst = nameFirst;
+            if (descriptionFirst == null)
+                this.descriptionFirst = "";
+
+            this.nameSecond = nameSecond;
+            if (descriptionSecond == null)
+                this.descriptionSecond = "";
+
             this.date = date;
         }
 
@@ -239,32 +294,64 @@ public class FoodMenuManager {
                     Locale.forLanguageTag("cs-CZ")).format(parsedDate)) + ")";
         }
 
-        public String parseSoup() {
-            int index = name.indexOf("1.");
+        public String parseFirstSoup() {
+            int index = nameFirst.indexOf("1.");
 
             if (index == -1) {
-                return name;
+                return nameFirst;
             } else {
-                return name.substring(0, name.indexOf("1."));
+                return nameFirst.substring(0, index);
             }
         }
 
-        public String parseMainCourse() {
-            int index = name.indexOf("1.");
+        public String parseSecondSoup() {
+            int index = nameSecond.indexOf("2.");
 
             if (index == -1) {
-                return name;
+                return nameSecond;
             } else {
-                return name.substring(name.indexOf("1.") + 2);
+                return nameSecond.substring(0, index);
             }
         }
 
-        public boolean hasDescription() {
-            return !description.isBlank();
+        public String parseFirstMainCourse() {
+            int index = nameFirst.indexOf("1.");
+
+            if (index == -1) {
+                return nameFirst;
+            } else {
+                return nameFirst.substring(index + 2);
+            }
         }
 
-        public String parseDescription() {
-            return description.replace("(", "").replace(")", "");
+        public String parseSecondMainCourse() {
+            int index = nameSecond.indexOf("2.");
+
+            if (index == -1) {
+                return nameSecond;
+            } else {
+                return nameSecond.substring(index + 2);
+            }
+        }
+
+        public boolean hasFirstDescription() {
+            return !descriptionFirst.isBlank();
+        }
+
+        public boolean hasSecondDescription() {
+            return !descriptionSecond.isBlank();
+        }
+
+        public boolean hasSecond() {
+            return nameSecond != null;
+        }
+
+        public String parseFirstDescription() {
+            return descriptionFirst.replace("(", "").replace(")", "");
+        }
+
+        public String parseSecondDescription() {
+            return descriptionSecond.replace("(", "").replace(")", "");
         }
     }
 
@@ -304,8 +391,13 @@ public class FoodMenuManager {
                     String name = element.getElementsByTagName("nazev").item(0).getTextContent();
                     String description = element.getElementsByTagName("popis").item(0).getTextContent();
                     String date = element.getElementsByTagName("datum").item(0).getTextContent();
+                    String type = element.getElementsByTagName("druh").item(0).getTextContent();
 
-                    meals.add(new Meal(name, description, date));
+                    if (type.equals("2")) {
+                        updateMeal(meals, new Meal(name, description, date), date);
+                    } else {
+                        meals.add(new Meal(name, description, date));
+                    }
                 } catch (Exception exception) {
                     exception.printStackTrace();
                     Logger.error("Error occurred while processing data from FoodMenuXML on index " + x + "!");
@@ -373,6 +465,15 @@ public class FoodMenuManager {
             input.close();
 
             return contents;
+        }
+
+        private static void updateMeal(List<Meal> meals, Meal meal, String date) {
+            for (Meal mealToUpdate : meals) {
+                if (mealToUpdate.getDate().equalsIgnoreCase(date)) {
+                    mealToUpdate.nameSecond = meal.nameFirst;
+                    mealToUpdate.descriptionSecond = meal.descriptionFirst;
+                }
+            }
         }
     }
 }
